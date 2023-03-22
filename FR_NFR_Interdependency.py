@@ -632,20 +632,20 @@ class Agent_FR_NFR_Interdependency:
                 self.step = -1
 
 
-## FR->NFR Dependency
+## Edit as required 
 quadrant = "fr_nfr"
-N = 8
+N = 12
 NFR_Count = 4
-K = 3
+K = 5
 problem_spaces = {
     "High Dependency": {
         "Name": "high_dependency",
         "N": N,
         "NFR_Count": NFR_Count,
         "K": K,
-        "NFR_NFR_K": 2,
+        "NFR_NFR_K": 1,
         "FR_NFR_K": 4,
-        "NFR_FR_K": 4,
+        "NFR_FR_K": 6,
         "K_within": None,
         "K_between": None,
     },
@@ -654,9 +654,9 @@ problem_spaces = {
         "N": N,
         "NFR_Count": NFR_Count,
         "K": K,
-        "NFR_NFR_K": 2,
+        "NFR_NFR_K": 1,
         "FR_NFR_K": 2,
-        "NFR_FR_K": 4,
+        "NFR_FR_K": 6,
         "K_within": None,
         "K_between": None,
     },
@@ -665,9 +665,9 @@ problem_spaces = {
         "N": N,
         "NFR_Count": NFR_Count,
         "K": K,
-        "NFR_NFR_K": 2,
+        "NFR_NFR_K": 1,
         "FR_NFR_K": 0,
-        "NFR_FR_K": 4,
+        "NFR_FR_K": 6,
         "K_within": None,
         "K_between": None,
     },
