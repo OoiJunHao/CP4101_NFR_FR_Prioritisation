@@ -265,11 +265,6 @@ with tqdm(
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis
-        print(
-            f"Printing agents performance for {problem_space_configs['fr_focus']} fr_focus..."
-        )
-        print(agents_performance)
-        print()
         performance = []
         for period in range(search_iteration):
             temp = [
@@ -277,7 +272,6 @@ with tqdm(
             ]
             performance.append(sum(temp) / len(temp))
         results[problem_space_name] = performance
-print(results)
 
 # output json
 json = json.dumps(results)

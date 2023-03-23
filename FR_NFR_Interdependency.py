@@ -238,16 +238,16 @@ if __name__ == "__main__":
     quadrant = "fr_nfr"
     N = 12
     NFR_Count = 4
-    K = 3
+    K = 5
     problem_spaces = {
         "High Dependency": {
             "name": "high_dependency",
             "N": N,
             "NFR_Count": NFR_Count,
             "K": K,
-            "NFR_NFR_K": 2,
+            "NFR_NFR_K": 1,
             "FR_NFR_K": 4,
-            "NFR_FR_K": 4,
+            "NFR_FR_K": 6,
             "K_within": None,
             "K_between": None,
         },
@@ -256,9 +256,9 @@ if __name__ == "__main__":
             "N": N,
             "NFR_Count": NFR_Count,
             "K": K,
-            "NFR_NFR_K": 2,
+            "NFR_NFR_K": 1,
             "FR_NFR_K": 2,
-            "NFR_FR_K": 4,
+            "NFR_FR_K": 6,
             "K_within": None,
             "K_between": None,
         },
@@ -267,9 +267,9 @@ if __name__ == "__main__":
             "N": N,
             "NFR_Count": NFR_Count,
             "K": K,
-            "NFR_NFR_K": 2,
+            "NFR_NFR_K": 1,
             "FR_NFR_K": 0,
-            "NFR_FR_K": 4,
+            "NFR_FR_K": 6,
             "K_within": None,
             "K_between": None,
         },
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     # output json
     json_together = json.dumps(results_together)
     f = open(f"interdepency__{quadrant}__together__results.json", "w")
-    f.write(results_together)
+    f.write(json_together)
     f.close()
 
     results_separate = {}

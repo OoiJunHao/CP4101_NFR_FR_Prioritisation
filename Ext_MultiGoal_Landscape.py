@@ -177,9 +177,13 @@ class LandScape_MultiGoal:
             min_normalizor_nfr = min([val[1] for val in self.cache.values()])
 
             for k in self.cache.keys():
-                self.cache[k][0] = (self.cache[k][0]-min_normalizor_fr)/(normalizor_fr-min_normalizor_fr)
-                self.cache[k][1] = (self.cache[k][1]-min_normalizor_nfr)/(normalizor_nfr-min_normalizor_nfr)
-        
+                self.cache[k][0] = (self.cache[k][0] - min_normalizor_fr) / (
+                    normalizor_fr - min_normalizor_fr
+                )
+                self.cache[k][1] = (self.cache[k][1] - min_normalizor_nfr) / (
+                    normalizor_nfr - min_normalizor_nfr
+                )
+
         self.cog_cache = {}
 
     def query_fitness(self, state):
@@ -214,19 +218,36 @@ class Agent_MultiGoal:
                 temp_state[choice] ^= 1
             self.step = -self.step
 
-            if self.landscape.query_fitness(self.state)[0]<=self.landscape.query_fitness(temp_state)[0] and self.landscape.query_fitness(self.state)[1]<=self.landscape.query_fitness(temp_state)[1]:
+            if (
+                self.landscape.query_fitness(self.state)[0]
+                <= self.landscape.query_fitness(temp_state)[0]
+                and self.landscape.query_fitness(self.state)[1]
+                <= self.landscape.query_fitness(temp_state)[1]
+            ):
                 self.state = temp_state
-                self.fitness = sum(self.landscape.query_fitness(temp_state))/2.0
-        
+                self.fitness = sum(self.landscape.query_fitness(temp_state)) / 2.0
+
         # to do all FR first followed by all NFR
         else:
             temp_state = list(self.state)
-            choice = np.random.choice(self.search_space) if self.step == 1 else np.random.choice(self.NFR_Range)
-            temp_state[choice]^=1
+            choice = (
+                np.random.choice(self.search_space)
+                if self.step == 1
+                else np.random.choice(self.NFR_Range)
+            )
+            temp_state[choice] ^= 1
 
-            if (self.step == 1 and self.landscape.query_fitness(self.state)[0]<self.landscape.query_fitness(temp_state)[0]) or (self.step == -1 and self.landscape.query_fitness(self.state)[1]<self.landscape.query_fitness(temp_state)[1]):
+            if (
+                self.step == 1
+                and self.landscape.query_fitness(self.state)[0]
+                < self.landscape.query_fitness(temp_state)[0]
+            ) or (
+                self.step == -1
+                and self.landscape.query_fitness(self.state)[1]
+                < self.landscape.query_fitness(temp_state)[1]
+            ):
                 self.state = temp_state
-                self.fitness = sum(self.landscape.query_fitness(temp_state))/2.0
+                self.fitness = sum(self.landscape.query_fitness(temp_state)) / 2.0
                 self.search_space = self.full_search_space.copy()
             elif step == 1:
                 self.search_space.remove(choice)
@@ -300,9 +321,6 @@ with tqdm(
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis
-        print(f"Printing agents performance for N{N}__together...")
-        print(agents_performance)
-        print()
         performance = []
         for period in range(search_iteration):
             temp = [
@@ -310,8 +328,6 @@ with tqdm(
             ]
             performance.append(sum(temp) / len(temp))
         results_together[problem_space_name] = performance
-print(results_together)
-print()
 
 # output json
 json_together = json.dumps(results_together)
@@ -360,9 +376,6 @@ with tqdm(
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis
-        print(f"Printing agents performance for N{N}__separate...")
-        print(agents_performance)
-        print()
         performance = []
         for period in range(search_iteration):
             temp = [
@@ -370,7 +383,6 @@ with tqdm(
             ]
             performance.append(sum(temp) / len(temp))
         results_separate[problem_space_name] = performance
-print(results_separate)
 
 # output json
 json_separate = json.dumps(results_separate)

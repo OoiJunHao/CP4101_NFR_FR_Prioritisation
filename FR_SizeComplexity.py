@@ -299,9 +299,6 @@ with tqdm(
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis
-        print(f"Printing agents performance for N{N}__together...")
-        print(agents_performance)
-        print()
         performance = []
         for period in range(search_iteration):
             temp = [
@@ -309,8 +306,6 @@ with tqdm(
             ]
             performance.append(sum(temp) / len(temp))
         results_together[problem_space_name] = performance
-print(results_together)
-print()
 
 # output json
 json_together = json.dumps(results_together)
@@ -359,9 +354,6 @@ with tqdm(
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis
-        print(f"Printing agents performance for N{N}__separate...")
-        print(agents_performance)
-        print()
         performance = []
         for period in range(search_iteration):
             temp = [
@@ -369,7 +361,6 @@ with tqdm(
             ]
             performance.append(sum(temp) / len(temp))
         results_separate[problem_space_name] = performance
-print(results_separate)
 
 # output json
 json_separate = json.dumps(results_separate)
