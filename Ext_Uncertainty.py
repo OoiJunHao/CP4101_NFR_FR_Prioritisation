@@ -401,6 +401,6 @@ if __name__ == "__main__":
 
     # output json
     json_separate = json.dumps(results_separate)
-    f = open(f"availability__N{N}__separate__results.json", "w")
+    f = open(f"uncertainty__N{N}__separate__results.json", "w")
     f.write(json_separate)
     f.close()
