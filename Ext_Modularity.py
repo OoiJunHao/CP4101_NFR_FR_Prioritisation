@@ -200,7 +200,7 @@ class Agent_Modularity_Together:
         self.search_space_fr = [i for i in range(self.N - self.NFR_Count)]
         self.full_search_space_fr = [i for i in range(self.N - self.NFR_Count)]
 
-    def change_fr_module():
+    def change_fr_module(self):
         self.current_module = (self.current_module + 1) % self.M
         self.search_space_fr = [
             i
@@ -220,14 +220,7 @@ class Agent_Modularity_Together:
     def search(self):
         temp_state = list(self.state)
         if self.focus == 1:
-            search_space = [
-                i
-                for i in range(
-                    self.module_size * self.current_module,
-                    self.module_size * (self.current_module + 1),
-                )
-            ]
-            choice = np.random.choice(self.search_space)
+            choice = np.random.choice(self.search_space_fr)
             temp_state[choice] ^= 1
             if self.landscape.query_fitness(self.state) < self.landscape.query_fitness(
                 temp_state
@@ -255,7 +248,7 @@ class Agent_Modularity_Together:
                 self.search_space_nfr.remove(choice)
             if len(self.search_space_nfr) == 0:
                 self.focus = -self.focus
-                self.search_space_nfr = self.full_search_space_nfr
+                self.search_space_nfr = self.full_search_space_nfr.copy()
 
 
 class Agent_Modularity_Separate:
@@ -291,7 +284,7 @@ class Agent_Modularity_Separate:
         self.module_left = [i for i in range(self.M)]
         self.module_list = [i for i in range(self.M)]
 
-    def change_fr_module():
+    def change_fr_module(self):
         self.current_module = (self.current_module + 1) % self.M
         self.search_space_fr = [
             i
@@ -311,14 +304,7 @@ class Agent_Modularity_Separate:
     def search(self):
         temp_state = list(self.state)
         if self.focus == 1:
-            search_space = [
-                i
-                for i in range(
-                    self.module_size * self.current_module,
-                    self.module_size * (self.current_module + 1),
-                )
-            ]
-            choice = np.random.choice(search_space)
+            choice = np.random.choice(self.search_space_fr)
             temp_state[choice] ^= 1
 
             if self.landscape.query_fitness(self.state) < self.landscape.query_fitness(
