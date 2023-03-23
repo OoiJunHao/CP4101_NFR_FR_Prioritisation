@@ -196,7 +196,7 @@ class Agent_MultiGoal:
         self.N = N + NFR_Count
         self.state = np.random.choice([0, 1], self.N).tolist()
         self.landscape = landscape
-        self.fitness = self.landscape.query_fitness(self.state)
+        self.fitness = sum(self.landscape.query_fitness(self.state)) / 2.0
         self.NFR_Count = NFR_Count
         self.FR_Range = [i for i in range(self.N - self.NFR_Count)]
         self.NFR_Range = [i for i in range(self.N - self.NFR_Count, self.N)]
@@ -249,7 +249,7 @@ class Agent_MultiGoal:
                 self.state = temp_state
                 self.fitness = sum(self.landscape.query_fitness(temp_state)) / 2.0
                 self.search_space = self.full_search_space.copy()
-            elif step == 1:
+            elif self.step == 1:
                 self.search_space.remove(choice)
             if len(self.search_space) == 0:
                 self.step = -1
@@ -260,6 +260,7 @@ N = 12
 NFR_Count = 4
 problem_spaces = {
     "Complex": {
+        "name": "complex",
         "N": N,
         "NFR_Count": NFR_Count,
         "K": N - 1,
@@ -270,6 +271,7 @@ problem_spaces = {
         "K_between": None,
     },
     "Simple": {
+        "name": "simple",
         "N": N,
         "NFR_Count": NFR_Count,
         "K": 0,
@@ -317,7 +319,7 @@ with tqdm(
                 agents_performance.append(agent_performance)
             pbar.update(1)
         np.savetxt(
-            f"multiGoal__N{N}__together.csv",
+            f"multiGoal__N{N}_{problem_space_configs['name']}__together.csv",
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis
@@ -372,7 +374,7 @@ with tqdm(
                 agents_performance.append(agent_performance)
             pbar.update(1)
         np.savetxt(
-            f"multiGoal__N{N}__separate.csv",
+            f"multiGoal__N{N}_{problem_space_configs['name']}__separate.csv",
             agents_performance,
             delimiter=",",
         )  # save to csv for analysis

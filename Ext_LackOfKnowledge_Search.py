@@ -4,6 +4,7 @@ from typing import List
 import random as rnd
 import json
 from tqdm import tqdm
+import itertools
 
 agent_num = 1000
 search_iteration = 250
@@ -221,7 +222,7 @@ class Agent_NoCrossKnowledge:
             )
             temp_state[choice] ^= 1
 
-            if step == 1:  # we are still looking for max in FR space
+            if self.step == 1:  # we are still looking for max in FR space
                 current_fitness = self.landscape.query_fitness(self.state)
                 all_combi = []
                 for nfr_combi in list(
