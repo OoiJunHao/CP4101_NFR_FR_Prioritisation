@@ -4,11 +4,11 @@ from typing import List
 import random as rnd
 import json
 from tqdm import tqdm
-import itertools
 
 agent_num = 1000
 search_iteration = 250
 landscape_repetitions = 100
+
 
 # taking the basic landscape as the difference here is in the agent behaviour
 class LandScape_FR_SizeComplexity:
@@ -180,18 +180,23 @@ class LandScape_FR_SizeComplexity:
         return self.cache[bit]
 
 
-class Agent_NoCrossKnowledge:
-    def __init__(self, N, NFR_Count, landscape, combined_search=False):
+class Agent_ResourceAvailability:
+    def __init__(self, N, NFR_Count, landscape, availability, combined_search=False):
         self.N = N + NFR_Count
         self.state = np.random.choice([0, 1], self.N).tolist()
         self.landscape = landscape
         self.fitness = self.landscape.query_fitness(self.state)
         self.NFR_Count = NFR_Count
-        self.FR_Range = [i for i in range(self.N - self.NFR_Count)]
+        self.availability = availability
         self.NFR_Range = [i for i in range(self.N - self.NFR_Count, self.N)]
 
         self.search_space = [i for i in range(self.N - self.NFR_Count)]
-        self.full_search_space = [i for i in range(self.N - self.NFR_Count)]
+        self.search_space = np.random.choice(
+            self.search_space,
+            int((self.N - self.NFR_Count) * self.availability),
+            replace=False,
+        )
+        self.full_search_space = self.search_space.copy()
         self.combined_search = combined_search
         self.step = 1  # 1 means to look at FR, -1 means to look at NFR
 
@@ -212,6 +217,7 @@ class Agent_NoCrossKnowledge:
             ):
                 self.state = temp_state
                 self.fitness = self.landscape.query_fitness(temp_state)
+
         # to do all FR first followed by all NFR
         else:
             temp_state = list(self.state)
@@ -222,171 +228,169 @@ class Agent_NoCrossKnowledge:
             )
             temp_state[choice] ^= 1
 
-            if self.step == 1:  # we are still looking for max in FR space
-                current_fitness = self.landscape.query_fitness(self.state)
-                all_combi = []
-                for nfr_combi in list(
-                    itertools.product([0, 1], repeat=len(self.NFR_Range))
-                ):
-                    nfr_state = temp_state[0 : len(self.FR_Range)]
-                    nfr_state.extend(nfr_combi)
-                    all_combi.append(nfr_state)
-                new_fitness = sum(
-                    [
-                        self.landscape.query_fitness(temp_state_combi)
-                        for temp_state_combi in all_combi
-                    ]
-                ) / len(
-                    all_combi
-                )  # average of all combinations of NFR
-                if current_fitness < new_fitness:
-                    self.state = temp_state
-                    self.fitness = new_fitness
-                    self.search_space = self.full_search_space.copy()
-                elif self.step == 1:
-                    self.search_space.remove(choice)
-                if len(self.search_space) == 0:
-                    self.step = -1
-            else:  # we are looking through the NFRs at this point
-                if self.landscape.query_fitness(
-                    self.state
-                ) < self.landscape.query_fitness(temp_state):
-                    self.state = temp_state
-                    self.fitness = self.landscape.query_fitness(temp_state)
+            if self.landscape.query_fitness(self.state) < self.landscape.query_fitness(
+                temp_state
+            ):
+                self.state = temp_state
+                self.fitness = self.landscape.query_fitness(temp_state)
+                self.search_space = self.full_search_space.copy()
+            elif self.step == 1:
+                self.search_space.remove(choice)
+            if len(self.search_space) == 0:
+                self.step = -1
 
 
-# Edit N (remember to edit the interdependencies too)
-N = 12
-NFR_Count = 4
-problem_spaces = {
-    "Complex": {
-        "N": N,
-        "NFR_Count": NFR_Count,
-        "K": N - 1,
-        "NFR_NFR_K": 1,
-        "FR_NFR_K": 2,
-        "NFR_FR_K": 6,
-        "K_within": None,
-        "K_between": None,
-    },
-    "Simple": {
-        "N": N,
-        "NFR_Count": NFR_Count,
-        "K": 0,
-        "NFR_NFR_K": 1,
-        "FR_NFR_K": 2,
-        "NFR_FR_K": 6,
-        "K_within": None,
-        "K_between": None,
-    },
-}
-results_together = {}
-with tqdm(
-    total=landscape_repetitions * len(problem_spaces)
-) as pbar:  # for progress tracking purposes
-    for problem_space_name, problem_space_configs in problem_spaces.items():
-        np.random.seed(100)
-        agents_performance = []
-        for i in range(landscape_repetitions):  # landscape repetitions
-            landscape = LandScape_FR_SizeComplexity(
-                N=problem_space_configs["N"],
-                K=problem_space_configs["K"],
-                NFR_Count=problem_space_configs["NFR_Count"],
-                FR_NFR_K=problem_space_configs["FR_NFR_K"],
-                NFR_NFR_K=problem_space_configs["NFR_NFR_K"],
-                NFR_FR_K=problem_space_configs["NFR_FR_K"],
-                K_within=problem_space_configs["K_within"],
-                K_between=problem_space_configs["K_between"],
-            )
-            landscape.initialize(norm=True)
-            # print(landscape.IM) # to remove
-            agents = []
-            for _ in range(agent_num):
-                agent = Agent_NoCrossKnowledge(
+if __name__ == "__main__":
+    N = 12
+    NFR_Count = 4
+    problem_spaces = {
+        "100%": {
+            "name": "100",
+            "N": N,
+            "NFR_Count": NFR_Count,
+            "K": 5,
+            "NFR_NFR_K": 1,
+            "FR_NFR_K": 2,
+            "NFR_FR_K": 6,
+            "K_within": None,
+            "K_between": None,
+            "availability": 1,
+        },
+        "70%": {
+            "name": "70",
+            "N": N,
+            "NFR_Count": NFR_Count,
+            "K": 5,
+            "NFR_NFR_K": 1,
+            "FR_NFR_K": 2,
+            "NFR_FR_K": 6,
+            "K_within": None,
+            "K_between": None,
+            "availability": 0.75,
+        },
+        "50%": {
+            "name": "50",
+            "N": N,
+            "NFR_Count": NFR_Count,
+            "K": 5,
+            "NFR_NFR_K": 1,
+            "FR_NFR_K": 2,
+            "NFR_FR_K": 6,
+            "K_within": None,
+            "K_between": None,
+            "availability": 0.5,
+        },
+    }
+    results_together = {}
+    with tqdm(
+        total=landscape_repetitions * len(problem_spaces)
+    ) as pbar:  # for progress tracking purposes
+        for problem_space_name, problem_space_configs in problem_spaces.items():
+            np.random.seed(100)
+            agents_performance = []
+            for i in range(landscape_repetitions):  # landscape repetitions
+                landscape = LandScape_FR_SizeComplexity(
                     N=problem_space_configs["N"],
-                    landscape=landscape,
+                    K=problem_space_configs["K"],
                     NFR_Count=problem_space_configs["NFR_Count"],
-                    combined_search=True,
+                    FR_NFR_K=problem_space_configs["FR_NFR_K"],
+                    NFR_NFR_K=problem_space_configs["NFR_NFR_K"],
+                    NFR_FR_K=problem_space_configs["NFR_FR_K"],
+                    K_within=problem_space_configs["K_within"],
+                    K_between=problem_space_configs["K_between"],
                 )
-                agents.append(agent)
-            for agent in agents:  # agent repetitions
-                agent_performance = []
-                for _ in range(search_iteration):  # i.e., the number of steps
-                    agent.search()
-                    agent_performance.append(agent.fitness)
-                agents_performance.append(agent_performance)
-            pbar.update(1)
-        np.savetxt(
-            f"noCrossKnowledge__N{N}__together.csv",
-            agents_performance,
-            delimiter=",",
-        )  # save to csv for analysis
-        performance = []
-        for period in range(search_iteration):
-            temp = [
-                agent_performance[period] for agent_performance in agents_performance
-            ]
-            performance.append(sum(temp) / len(temp))
-        results_together[problem_space_name] = performance
+                landscape.initialize(norm=True)
+                # print(landscape.IM) # to remove
+                agents = []
+                for _ in range(agent_num):
+                    agent = Agent_ResourceAvailability(
+                        N=problem_space_configs["N"],
+                        landscape=landscape,
+                        NFR_Count=problem_space_configs["NFR_Count"],
+                        availability=problem_space_configs["availability"],
+                        combined_search=True,
+                    )
+                    agents.append(agent)
+                for agent in agents:  # agent repetitions
+                    agent_performance = []
+                    for _ in range(search_iteration):  # i.e., the number of steps
+                        agent.search()
+                        agent_performance.append(agent.fitness)
+                    agents_performance.append(agent_performance)
+                pbar.update(1)
+            np.savetxt(
+                f"availability__{name}__together.csv",
+                agents_performance,
+                delimiter=",",
+            )  # save to csv for analysis
+            performance = []
+            for period in range(search_iteration):
+                temp = [
+                    agent_performance[period]
+                    for agent_performance in agents_performance
+                ]
+                performance.append(sum(temp) / len(temp))
+            results_together[problem_space_name] = performance
 
+    # output json
+    json_together = json.dumps(results_together)
+    f = open(f"availability__N{N}__together__results.json", "w")
+    f.write(json_together)
+    f.close()
 
-# output json
-json_together = json.dumps(results_together)
-f = open(f"noCrossKnowledge__N{N}__together__results.json", "w")
-f.write(json_together)
-f.close()
-
-results_separate = {}
-with tqdm(
-    total=landscape_repetitions * len(problem_spaces)
-) as pbar:  # for progress tracking purposes
-    for problem_space_name, problem_space_configs in problem_spaces.items():
-        np.random.seed(100)
-        agents_performance = []
-        for i in range(landscape_repetitions):  # landscape repetitions
-            landscape = LandScape_FR_SizeComplexity(
-                N=problem_space_configs["N"],
-                K=problem_space_configs["K"],
-                NFR_Count=problem_space_configs["NFR_Count"],
-                FR_NFR_K=problem_space_configs["FR_NFR_K"],
-                NFR_NFR_K=problem_space_configs["NFR_NFR_K"],
-                NFR_FR_K=problem_space_configs["NFR_FR_K"],
-                K_within=problem_space_configs["K_within"],
-                K_between=problem_space_configs["K_between"],
-            )
-            landscape.initialize(norm=True)
-            # print(landscape.IM) # to remove
-            agents = []
-            for _ in range(agent_num):
-                agent = Agent_NoCrossKnowledge(
+    results_separate = {}
+    with tqdm(
+        total=landscape_repetitions * len(problem_spaces)
+    ) as pbar:  # for progress tracking purposes
+        for problem_space_name, problem_space_configs in problem_spaces.items():
+            np.random.seed(100)
+            agents_performance = []
+            for i in range(landscape_repetitions):  # landscape repetitions
+                landscape = LandScape_FR_SizeComplexity(
                     N=problem_space_configs["N"],
-                    landscape=landscape,
+                    K=problem_space_configs["K"],
                     NFR_Count=problem_space_configs["NFR_Count"],
-                    combined_search=False,
+                    FR_NFR_K=problem_space_configs["FR_NFR_K"],
+                    NFR_NFR_K=problem_space_configs["NFR_NFR_K"],
+                    NFR_FR_K=problem_space_configs["NFR_FR_K"],
+                    K_within=problem_space_configs["K_within"],
+                    K_between=problem_space_configs["K_between"],
                 )
-                agents.append(agent)
-            for agent in agents:  # agent repetitions
-                agent_performance = []
-                for _ in range(search_iteration):  # i.e., the number of steps
-                    agent.search()
-                    agent_performance.append(agent.fitness)
-                agents_performance.append(agent_performance)
-            pbar.update(1)
-        np.savetxt(
-            f"noCrossKnowledge__N{N}__separate.csv",
-            agents_performance,
-            delimiter=",",
-        )  # save to csv for analysis
-        performance = []
-        for period in range(search_iteration):
-            temp = [
-                agent_performance[period] for agent_performance in agents_performance
-            ]
-            performance.append(sum(temp) / len(temp))
-        results_separate[problem_space_name] = performance
+                landscape.initialize(norm=True)
+                # print(landscape.IM) # to remove
+                agents = []
+                for _ in range(agent_num):
+                    agent = Agent_ResourceAvailability(
+                        N=problem_space_configs["N"],
+                        landscape=landscape,
+                        NFR_Count=problem_space_configs["NFR_Count"],
+                        availability=problem_space_configs["availability"],
+                        combined_search=False,
+                    )
+                    agents.append(agent)
+                for agent in agents:  # agent repetitions
+                    agent_performance = []
+                    for _ in range(search_iteration):  # i.e., the number of steps
+                        agent.search()
+                        agent_performance.append(agent.fitness)
+                    agents_performance.append(agent_performance)
+                pbar.update(1)
+            np.savetxt(
+                f"availability__{name}__separate.csv",
+                agents_performance,
+                delimiter=",",
+            )  # save to csv for analysis
+            performance = []
+            for period in range(search_iteration):
+                temp = [
+                    agent_performance[period]
+                    for agent_performance in agents_performance
+                ]
+                performance.append(sum(temp) / len(temp))
+            results_separate[problem_space_name] = performance
 
-# output json
-json_separate = json.dumps(results_separate)
-f = open(f"noCrossKnowledge__N{N}__separate__results.json", "w")
-f.write(json_separate)
-f.close()
+    # output json
+    json_separate = json.dumps(results_separate)
+    f = open(f"availability__N{N}__separate__results.json", "w")
+    f.write(json_separate)
+    f.close()
