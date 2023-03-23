@@ -180,22 +180,17 @@ class LandScape_FR_SizeComplexity:
         return self.cache[bit]
 
 
-class Agent_ResourceAvailability:
-    def __init__(self, N, NFR_Count, landscape, availability, combined_search=False):
+class Agent_Uncertainty:
+    def __init__(self, N, NFR_Count, landscape, uncertainty, combined_search=False):
         self.N = N + NFR_Count
         self.state = np.random.choice([0, 1], self.N).tolist()
         self.landscape = landscape
         self.fitness = self.landscape.query_fitness(self.state)
         self.NFR_Count = NFR_Count
-        self.availability = availability
+        self.uncertainty = uncertainty
         self.NFR_Range = [i for i in range(self.N - self.NFR_Count, self.N)]
 
         self.search_space = [i for i in range(self.N - self.NFR_Count)]
-        self.search_space = np.random.choice(
-            self.search_space,
-            int((self.N - self.NFR_Count) * self.availability),
-            replace=False,
-        )
         self.full_search_space = self.search_space.copy()
         self.combined_search = combined_search
         self.step = 1  # 1 means to look at FR, -1 means to look at NFR
@@ -204,17 +199,23 @@ class Agent_ResourceAvailability:
         # to do both NFR and FR in the same sprint
         if self.combined_search:
             temp_state = list(self.state)
+            percieved_new_fitness = 0
             if self.step == 1:
                 choice = np.random.choice(self.search_space)
                 temp_state[choice] ^= 1
+                error_term = np.random.normal(
+                    0, self.uncertainty, 1
+                )  # mean 0 and std based on supplied uncertainty
+                percieved_new_fitness = (
+                    self.landscape.query_fitness(temp_state) + error_term
+                )
             else:
                 choice = np.random.choice(self.NFR_Range)
                 temp_state[choice] ^= 1
+                percieved_new_fitness = self.landscape.query_fitness(temp_state)
             self.step = -self.step
 
-            if self.landscape.query_fitness(self.state) < self.landscape.query_fitness(
-                temp_state
-            ):
+            if self.landscape.query_fitness(self.state) < percieved_new_fitness:
                 self.state = temp_state
                 self.fitness = self.landscape.query_fitness(temp_state)
 
@@ -228,9 +229,18 @@ class Agent_ResourceAvailability:
             )
             temp_state[choice] ^= 1
 
-            if self.landscape.query_fitness(self.state) < self.landscape.query_fitness(
-                temp_state
-            ):
+            percieved_new_fitness = 0
+            if self.step == 1:
+                error_term = np.random.normal(
+                    0, self.uncertainty, 1
+                )  # mean 0 and std based on supplied uncertainty
+                percieved_new_fitness = (
+                    self.landscape.query_fitness(temp_state) + error_term
+                )
+            else:
+                percieved_new_fitness = self.landscape.query_fitness(temp_state)
+
+            if self.landscape.query_fitness(self.state) < percieved_new_fitness:
                 self.state = temp_state
                 self.fitness = self.landscape.query_fitness(temp_state)
                 self.search_space = self.full_search_space.copy()
@@ -244,8 +254,8 @@ if __name__ == "__main__":
     N = 12
     NFR_Count = 4
     problem_spaces = {
-        "100%": {
-            "name": "100",
+        "0.01": {
+            "name": "0.01",
             "N": N,
             "NFR_Count": NFR_Count,
             "K": 5,
@@ -254,10 +264,10 @@ if __name__ == "__main__":
             "NFR_FR_K": 6,
             "K_within": None,
             "K_between": None,
-            "availability": 1,
+            "uncertainty": 0.01,
         },
-        "70%": {
-            "name": "70",
+        "0.05": {
+            "name": "0.05",
             "N": N,
             "NFR_Count": NFR_Count,
             "K": 5,
@@ -266,10 +276,10 @@ if __name__ == "__main__":
             "NFR_FR_K": 6,
             "K_within": None,
             "K_between": None,
-            "availability": 0.75,
+            "uncertainty": 0.05,
         },
-        "50%": {
-            "name": "50",
+        "0.1": {
+            "name": "0.1",
             "N": N,
             "NFR_Count": NFR_Count,
             "K": 5,
@@ -278,7 +288,7 @@ if __name__ == "__main__":
             "NFR_FR_K": 6,
             "K_within": None,
             "K_between": None,
-            "availability": 0.5,
+            "uncertainty": 0.1,
         },
     }
     results_together = {}
@@ -303,11 +313,11 @@ if __name__ == "__main__":
                 # print(landscape.IM) # to remove
                 agents = []
                 for _ in range(agent_num):
-                    agent = Agent_ResourceAvailability(
+                    agent = Agent_Uncertainty(
                         N=problem_space_configs["N"],
                         landscape=landscape,
                         NFR_Count=problem_space_configs["NFR_Count"],
-                        availability=problem_space_configs["availability"],
+                        uncertainty=problem_space_configs["uncertainty"],
                         combined_search=True,
                     )
                     agents.append(agent)
@@ -319,7 +329,7 @@ if __name__ == "__main__":
                     agents_performance.append(agent_performance)
                 pbar.update(1)
             np.savetxt(
-                f"availability__{problem_space_configs['name']}__together.csv",
+                f"uncertainty__{problem_space_configs['name']}__together.csv",
                 agents_performance,
                 delimiter=",",
             )  # save to csv for analysis
@@ -334,7 +344,7 @@ if __name__ == "__main__":
 
     # output json
     json_together = json.dumps(results_together)
-    f = open(f"availability__N{N}__together__results.json", "w")
+    f = open(f"uncertainty__N{N}__together__results.json", "w")
     f.write(json_together)
     f.close()
 
@@ -360,11 +370,11 @@ if __name__ == "__main__":
                 # print(landscape.IM) # to remove
                 agents = []
                 for _ in range(agent_num):
-                    agent = Agent_ResourceAvailability(
+                    agent = Agent_Uncertainty(
                         N=problem_space_configs["N"],
                         landscape=landscape,
                         NFR_Count=problem_space_configs["NFR_Count"],
-                        availability=problem_space_configs["availability"],
+                        uncertainty=problem_space_configs["uncertainty"],
                         combined_search=False,
                     )
                     agents.append(agent)
@@ -376,7 +386,7 @@ if __name__ == "__main__":
                     agents_performance.append(agent_performance)
                 pbar.update(1)
             np.savetxt(
-                f"availability__{problem_space_configs['name']}__separate.csv",
+                f"uncertainty__{problem_space_configs['name']}__separate.csv",
                 agents_performance,
                 delimiter=",",
             )  # save to csv for analysis
