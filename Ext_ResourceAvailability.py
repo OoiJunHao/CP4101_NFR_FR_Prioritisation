@@ -256,8 +256,8 @@ if __name__ == "__main__":
             "K_between": None,
             "availability": 1,
         },
-        "70%": {
-            "name": "70",
+        "75%": {
+            "name": "75",
             "N": N,
             "NFR_Count": NFR_Count,
             "K": 5,
