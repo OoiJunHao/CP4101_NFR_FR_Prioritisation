@@ -195,7 +195,7 @@ class Agent_ResourceAvailability:
             self.search_space,
             int((self.N - self.NFR_Count) * self.availability),
             replace=False,
-        )
+        ).tolist()
         self.full_search_space = self.search_space.copy()
         self.combined_search = combined_search
         self.step = 1  # 1 means to look at FR, -1 means to look at NFR
