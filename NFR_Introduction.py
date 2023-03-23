@@ -182,7 +182,7 @@ class Agent_NFR_Introduction:
                 self.state = temp_state
                 self.fitness = self.landscape.query_fitness(temp_state)
             self.count += 1
-            if self.count >= self.step:
+            if self.count >= self.introduction_step:
                 self.focus = -self.focus
 
         else:
