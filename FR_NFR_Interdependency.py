@@ -4,7 +4,6 @@ from typing import List
 import random as rnd
 import json
 from tqdm import tqdm
-import asyncio
 
 agent_num = 1000
 search_iteration = 250
@@ -234,23 +233,6 @@ class Agent_FR_NFR_Interdependency:
                 self.step = -1
 
 
-async def conduct_search(agent, search_iteration):
-    agent_performance = []
-    for _ in range(search_iteration):
-        agent.search()
-        agent_performance.append(agent.fitness)
-        await asyncio.sleep(0)  # allows other tasks to run
-    return agent_performance
-
-
-async def search(agents):
-    tasks = []
-    for agent in agents:
-        tasks.append(asyncio.create_task(conduct_search(agent, search_iteration)))
-    agents_performance = await asyncio.gather(*tasks)
-    return agents_performance
-
-
 if __name__ == "__main__":
     ## FR->NFR Dependency
     quadrant = "fr_nfr"
@@ -321,24 +303,18 @@ if __name__ == "__main__":
                         combined_search=True,
                     )
                     agents.append(agent)
-                agents_performance = asyncio.run(search(agents))
-                # for agent in agents:  # agent repetitions
-                #     agent_performance = []
-                #     for _ in range(search_iteration):  # i.e., the number of steps
-                #         agent.search()
-                #         agent_performance.append(agent.fitness)
-                #     agents_performance.append(agent_performance)
+                for agent in agents:  # agent repetitions
+                    agent_performance = []
+                    for _ in range(search_iteration):  # i.e., the number of steps
+                        agent.search()
+                        agent_performance.append(agent.fitness)
+                    agents_performance.append(agent_performance)
                 pbar.update(1)
             np.savetxt(
                 f"interdepency__{quadrant}__{problem_space_configs['name']}__together.csv",
                 agents_performance,
                 delimiter=",",
             )  # save to csv for analysis
-            # print(
-            #     f"Printing agents performance for {quadrant}__{problem_space_configs['name']}__together..."
-            # )
-            # print(agents_performance)
-            # print()
             performance = []
             for period in range(search_iteration):
                 temp = [
@@ -347,9 +323,6 @@ if __name__ == "__main__":
                 ]
                 performance.append(sum(temp) / len(temp))
             results_together[problem_space_name] = performance
-
-    # print(results_together)
-    # print()
 
     # output json
     json_together = json.dumps(results_together)
@@ -386,24 +359,18 @@ if __name__ == "__main__":
                         combined_search=False,
                     )
                     agents.append(agent)
-                agents_performance = asyncio.run(search(agents))
-                # for agent in agents:  # agent repetitions
-                #     agent_performance = []
-                #     for _ in range(search_iteration):  # i.e., the number of steps
-                #         agent.search()
-                #         agent_performance.append(agent.fitness)
-                #     agents_performance.append(agent_performance)
+                for agent in agents:  # agent repetitions
+                    agent_performance = []
+                    for _ in range(search_iteration):  # i.e., the number of steps
+                        agent.search()
+                        agent_performance.append(agent.fitness)
+                    agents_performance.append(agent_performance)
                 pbar.update(1)
             np.savetxt(
                 f"interdepency__{quadrant}__{problem_space_configs['name']}__separate.csv",
                 agents_performance,
                 delimiter=",",
             )  # save to csv for analysis
-            # print(
-            #     f"Printing agents performance for {quadrant}__{problem_space_configs['name']}__separate..."
-            # )
-            # print(agents_performance)
-            # print()
             performance = []
             for period in range(search_iteration):
                 temp = [
@@ -412,8 +379,6 @@ if __name__ == "__main__":
                 ]
                 performance.append(sum(temp) / len(temp))
             results_separate[problem_space_name] = performance
-
-    # print(results_separate)
 
     # output json
     json_separate = json.dumps(results_separate)
