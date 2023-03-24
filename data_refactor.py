@@ -11,23 +11,67 @@ Edit names of files and reformatting logic as required.
 import pandas as pd
 
 # Edit names to paths of interest
-file_names = ["availability__50__together", "availability__70__together", "availability__100__together", "availability__50__separate", "availability__70__separate", "availability__100__separate"]
+file_names = [
+    "availability__50__together",
+    "availability__70__together",
+    "availability__100__together",
+    "availability__50__separate",
+    "availability__70__separate",
+    "availability__100__separate",
+]
 
 for file_name in file_names:
-    #---read-full-name---
+    # ---read-full-name---
     df = pd.read_csv(f"{file_name}.csv", header=None)
     print(df.size)
     print(df.head())
 
-    #---out-compressed file---
-    df.to_csv(f"{file_name}.bz2" , index=False, compression='bz2')
+    # ---out-compressed file---
+    df.to_csv(f"{file_name}.bz2", index=False, compression="bz2")
 
-
-    #---load---
-    result_read = pd.read_csv(f"{file_name}.bz2", compression='bz2')
+    # ---load---
+    result_read = pd.read_csv(f"{file_name}.bz2", compression="bz2")
     print(result_read.size)
     print(result_read.head())
 
-    #--obtain last column values---
+    # --obtain last column values---
     values = result_read[result_read.columns[-1]]
     pd.DataFrame(values).to_csv(f"{file_name}_final_values.csv", header=False)
+
+
+"""
+Version 2
+"""
+# import pandas as pd
+
+# # Edit names to paths of interest
+# file_names = [
+#     "availability__50__together",
+#     "availability__70__together",
+#     "availability__100__together",
+#     "availability__50__separate",
+#     "availability__70__separate",
+#     "availability__100__separate",
+# ]
+# final_values = []
+
+# for file_name in file_names:
+#     # ---read-full-name---
+#     df = pd.read_csv(f"{file_name}.csv", header=None)
+#     print(df.size)
+#     print(df.head())
+
+#     # ---out-compressed file---
+#     df.to_csv(f"{file_name}.bz2", index=False, compression="bz2")
+
+#     # ---load---
+#     result_read = pd.read_csv(f"{file_name}.bz2", compression="bz2")
+#     print(result_read.size)
+#     print(result_read.head())
+
+#     # --obtain last column values---
+#     values = result_read[result_read.columns[-1]]
+#     pd.DataFrame(values).to_csv(f"{file_name}_final_values.csv", header=False)
+
+# final_df = pd.concat(final_values, axis=1, ignore_index=True)
+# final_df.to_csv("")
