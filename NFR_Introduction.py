@@ -4,6 +4,7 @@ from typing import List
 import random as rnd
 import json
 from tqdm import tqdm
+import pandas as pd
 
 agent_num = 2000
 search_iteration = 500
