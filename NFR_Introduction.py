@@ -11,13 +11,16 @@ landscape_repetitions = 250
 
 
 class LandScape_NFR_Introduction:
-    def __init__(self, N, K, NFR_Count, M=None, K_within=None, K_between=None):
+    def __init__(
+        self, N, K, NFR_Count, NFR_NFR_K, M=None, K_within=None, K_between=None
+    ):
         self.N = N
         self.K = K
         self.M = M
         self.K_within = K_within
         self.K_between = K_between
         self.NFR_Count = NFR_Count
+        self.NFR_NFR_K = NFR_NFR_K
         self.IM, self.IM_dic = None, None
         self.FC = None
         self.cache = {}
@@ -88,6 +91,16 @@ class LandScape_NFR_Introduction:
             for j in range(self.N, self.N + self.NFR_Count):
                 if i == j:
                     IM[i][j] = 1
+            probs = (
+                [1 / (self.NFR_Count - 1)] * (i - self.N)
+                + [0]
+                + [1 / (self.NFR_Count - 1)] * (self.NFR_Count - 1 - (i - self.N))
+            )
+            ids = np.random.choice(
+                self.NFR_Count, self.NFR_NFR_K, p=probs, replace=False
+            )
+            for index in ids:
+                IM[i][index + self.N] = 1
 
         IM_dic = defaultdict(list)
         for i in range(len(IM)):
@@ -188,6 +201,7 @@ class Agent_NFR_Introduction:
         else:
             choice = np.random.choice(self.FR_Range)
             choice2 = choice + self.N - self.NFR_Count
+            # # Experiments
             # temp_state[choice] ^= 1
             # temp_state[choice2] ^= 1
             # if self.landscape.query_fitness(self.state) < self.landscape.query_fitness(
@@ -196,7 +210,6 @@ class Agent_NFR_Introduction:
             #     self.state = temp_state
             #     self.fitness = self.landscape.query_fitness(temp_state)
 
-            # experiment
             previous_fitness = self.landscape.query_fitness(self.state)
 
             temp_state_1 = list(self.state)
@@ -241,11 +254,12 @@ if __name__ == "__main__":
     NFR_Count = 8
     K = 3
     problem_spaces = {}
-    for i in range(0, 160, 10):
-        problem_spaces[f"{i}%"] = {
+    for i in range(0, 104, 5):
+        problem_spaces[f"{i}"] = {
             "N": N,
             "NFR_Count": NFR_Count,
             "K": K,
+            "NFR_NFR_K": (NFR_Count - 1) // 2,  # up to you
             "introduction_step": int(i),
         }
     results = {}
@@ -260,6 +274,7 @@ if __name__ == "__main__":
                     N=problem_space_configs["N"],
                     K=problem_space_configs["K"],
                     NFR_Count=problem_space_configs["NFR_Count"],
+                    NFR_NFR_K=problem_space_configs["NFR_NFR_K"],
                 )
                 landscape.initialize(norm=True)
                 # print(landscape.IM) # to remove
@@ -279,11 +294,17 @@ if __name__ == "__main__":
                         agent_performance.append(agent.fitness)
                     agents_performance.append(agent_performance)
                 pbar.update(1)
-            np.savetxt(
-                f"nfr_intro_N{N}K{K}_{problem_space_configs['introduction_step']}.csv",
-                agents_performance,
-                delimiter=",",
-            )  # save to csv for analysis
+            pd.DataFrame(agents_performance).to_csv(
+                f"nfr_intro_N{N}K{K}__{problem_space_configs['introduction_step']}.bz2",
+                header=False,
+                index=False,
+                compression="bz2",
+            )  # save to compressed csv for analysis
+            # np.savetxt(
+            #     f"nfr_intro_N{N}K{K}_{problem_space_configs['introduction_step']}.csv",
+            #     agents_performance,
+            #     delimiter=",",
+            # )  # save to csv for analysis
             performance = []
             for period in range(search_iteration):
                 temp = [
